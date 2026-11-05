@@ -1,0 +1,12 @@
+{
+  "name": "Heightline",
+  "short_name": "Heightline",
+  "description": "Estimate your adult height, track your growth and build a daily routine.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#e8eff2",
+  "theme_color": "#17495c",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

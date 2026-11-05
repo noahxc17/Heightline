@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Heightline</title>
+<meta name="description" content="Estimate your adult height, track your growth and build a daily routine. Your data stays on your device.">
+<meta name="theme-color" content="#17495c">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Heightline</h1>
+    <p>Estimate your adult height from your parents' heights, then see your family marked up the door frame.</p>
+  </header>
+
+  <nav class="tabs" aria-label="Heightline sections">
+    <a href="#predict" data-tab="predict">Predict</a>
+    <a href="#track" data-tab="track">Track</a>
+    <a href="#habits" data-tab="habits">Habits</a>
+    <a href="#photos" data-tab="photos">Photos</a>
+    <a href="#wrapped" data-tab="wrapped">Wrapped</a>
+  </nav>
+
+  <div class="layout" data-view="predict">
+    <form class="panel" id="form" autocomplete="off">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Height units">
+          <button type="button" id="unit-cm" aria-pressed="true">cm</button>
+          <button type="button" id="unit-ft" aria-pressed="false">ft + in</button>
+        </div>
+      </div>
+      <div class="example" id="example">Showing an example family. Change any box to use your own.</div>
+
+      <fieldset>
+        <legend>You</legend>
+        <div class="row">
+          <div>
+            <label for="sex">Sex at birth</label>
+            <select id="sex"><option value="male">Male</option><option value="female">Female</option></select>
+          </div>
+          <div>
+            <label for="age">Age</label>
+            <div class="unitbox">
+              <input id="age" type="number" inputmode="decimal" step="any" min="2" max="25" value="14" aria-label="Age in years">
+              <span>yrs</span>
+              <input id="age-months" type="number" inputmode="numeric" min="0" max="11" value="0" aria-label="Extra months">
+              <span>mths</span>
+            </div>
+          </div>
+        </div>
+        <div id="slot-current"></div>
+        <div>
+          <label for="bloom">Compared with people your age, did you start developing…</label>
+          <select id="bloom">
+            <option value="average">Around the same time, or not sure</option>
+            <option value="early">Earlier than most</option>
+            <option value="late">Later than most</option>
+          </select>
+        </div>
+        <div>
+          <label for="stage">Where are you in your growth?</label>
+          <select id="stage">
+            <option value="unknown">Not sure</option>
+            <option value="before">Growth spurt hasn't started</option>
+            <option value="during" selected>Growing quickly right now</option>
+            <option value="slowing">Growth has slowed down</option>
+            <option value="stopped">Height hasn't changed for over a year</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Your parents</legend>
+        <p class="hint">Use your biological parents' heights if you know them.</p>
+        <div class="row">
+          <div id="slot-mum"></div>
+          <div id="slot-dad"></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Rest of the family</legend>
+        <p class="hint">Use adult heights. Brothers, grandads and uncles can change your estimate if your mum is 163 cm or taller. Everyone appears on the door frame.</p>
+        <div id="family" style="display:grid;gap:10px"></div>
+        <div><button type="button" class="ghost" id="add-family">Add a family member</button></div>
+      </fieldset>
+    </form>
+
+    <section class="panel results" aria-live="polite">
+      <div class="result">
+        <div class="kicker" id="kicker">Estimated adult height</div>
+        <div class="big" id="big">—</div>
+        <div class="alt" id="alt"></div>
+        <div class="range" id="range"></div>
+        <div class="familyline" id="family-line" hidden>
+          <strong id="family-est"></strong>
+          <span class="hint">This is the tested formula. The big number above uses Heightline's own rule, which hasn't been tested.</span>
+        </div>
+      </div>
+      <svg id="frame" viewBox="0 0 340 430" role="img" aria-label="Door frame chart showing your estimated height range and family heights"></svg>
+      <ul class="notes" id="notes"></ul>
+      <details class="tech" id="tech" hidden>
+        <summary>Technical details</summary>
+        <dl id="tech-list"></dl>
+        <p class="hint">Decimals show the maths, but they don't make the estimate more accurate.</p>
+      </details>
+      <div class="actions">
+        <button type="button" class="primary" id="copy">Copy my result</button>
+        <span class="hint" id="copied" role="status"></span>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel tracker" data-view="track" aria-labelledby="tracker-title">
+    <div>
+      <h2 id="tracker-title">Growth tracker</h2>
+      <p class="hint">Measure at a similar time of day with no shoes on. Every 3 to 6 months is plenty.</p>
+    </div>
+    <div class="trackgrid">
+      <form class="entryform" id="entry-form" autocomplete="off">
+        <div>
+          <label for="entry-date">Date measured</label>
+          <input id="entry-date" type="date">
+        </div>
+        <div id="slot-entry"></div>
+        <div><button type="submit" class="primary" id="entry-save">Save measurement</button></div>
+        <p class="hint" id="entry-status" role="status"></p>
+      </form>
+      <div class="chartarea">
+        <div class="summary" id="track-summary">No measurements yet</div>
+        <p class="hint" id="track-detail">Add your height today, then come back in a few months to see your growth line.</p>
+        <svg id="growth" role="img" aria-label="Chart of your saved height measurements over time" hidden></svg>
+        <ul class="history" id="history"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" data-view="habits" aria-labelledby="habits-title">
+    <div>
+      <h2 id="habits-title" style="font:800 1.6rem/1.1 var(--display);margin:0 0 4px">Daily routine</h2>
+      <p class="hint">A simple routine for feeling strong and staying active. It's good for your body, but it won't make you taller or take you past your genetic limit.</p>
+    </div>
+    <div class="habitgrid">
+      <div>
+        <div class="lab">Today</div>
+        <div class="habitlist">
+          <label class="habit" for="task-exercise"><input id="task-exercise" type="checkbox"><span><strong>Exercise for 45 minutes</strong><span class="hint">Any activity you enjoy counts.</span></span></label>
+          <label class="habit" for="task-hang"><input id="task-hang" type="checkbox"><span><strong>Hang from a bar</strong><span class="hint">Up to 30 seconds. It can ease your back and build grip, but any stretch in your spine is temporary. Use a secure bar and stop if it hurts.</span></span></label>
+          <label class="habit" for="task-milk"><input id="task-milk" type="checkbox"><span><strong>Drink milk and honey</strong><span class="hint">Milk has protein and calcium. Swap it for something else if you have an allergy or don't drink milk.</span></span></label>
+          <label class="habit" for="task-stretch"><input id="task-stretch" type="checkbox"><span><strong>Stretch for 10 minutes</strong><span class="hint">Good for flexibility. Keep it gentle and never force a stretch.</span></span></label>
+          <label class="habit" for="task-calves"><input id="task-calves" type="checkbox"><span><strong>Do calf raises</strong><span class="hint">Try 3 sets of 15 to build stronger lower legs.</span></span></label>
+        </div>
+        <p class="hint" id="habit-status" role="status" style="min-height:1.4em;margin-top:8px"></p>
+      </div>
+      <div style="display:grid;gap:14px;min-width:0">
+        <div>
+          <div class="summary" id="habit-summary" style="font:800 1.25rem/1.25 var(--display)">Start your first check-in</div>
+          <p class="hint" id="habit-detail" style="margin:4px 0 0"></p>
+          <div class="week" id="habit-week" role="img"></div>
+        </div>
+        <p class="tip"><strong>Posture tip:</strong> standing tall can help you measure at your full height. Stretching and posture don't lengthen your bones, so any difference won't be new growth.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" data-view="photos" aria-labelledby="photos-title">
+    <div>
+      <h2 class="sectiontitle" id="photos-title" style="font:800 1.6rem/1.1 var(--display);margin:0 0 4px">Door photos</h2>
+      <p class="hint">Use the same door, and keep the phone in the same spot at the same height. Wear everyday clothes, and ask first before adding anyone else. Photos stay on this device, so they won't move to a new phone and can be lost if browser data is cleared.</p>
+    </div>
+    <form class="photoform" id="photo-form" autocomplete="off">
+      <div>
+        <label for="photo-date">Date taken</label>
+        <input id="photo-date" type="date">
+      </div>
+      <div>
+        <label for="photo-file">Photo</label>
+        <input id="photo-file" type="file" accept="image/*">
+      </div>
+      <button type="submit" class="primary" id="photo-save">Add photo</button>
+    </form>
+    <p class="hint" id="photo-status" role="status"></p>
+    <div id="compare-area" hidden style="display:grid;gap:12px">
+      <div class="row">
+        <div><label for="then-photo">Then</label><select id="then-photo"></select></div>
+        <div><label for="now-photo">Now</label><select id="now-photo"></select></div>
+      </div>
+      <div class="compare">
+        <figure><img id="then-img" alt=""></figure>
+        <figure><img id="now-img" alt=""></figure>
+      </div>
+      <div class="comparebar">
+        <span class="summary" id="compare-text" style="font:800 1.2rem/1.25 var(--display)"></span>
+        <button type="button" class="ghost" id="flip-play">Play timeline</button>
+      </div>
+    </div>
+    <div class="strip" id="photo-strip" aria-label="All door photos, oldest first"></div>
+    <p class="hint" id="photo-empty">No photos yet. Add your first one, then come back in a few months and add another.</p>
+  </section>
+
+  <section class="panel" data-view="wrapped" aria-labelledby="wrapped-title">
+    <div>
+      <h2 id="wrapped-title" style="font:800 1.6rem/1.1 var(--display);margin:0 0 4px">Growth Wrapped</h2>
+      <p class="hint">Your year in one card, made from your saved measurements. Your photos are never added to it.</p>
+    </div>
+    <div class="wrappedgrid" id="wrapped-grid" hidden>
+      <canvas id="wrapped-card" width="1080" height="1350" role="img"></canvas>
+      <div class="wrappedside">
+        <div>
+          <label for="wrapped-year">Year</label>
+          <select id="wrapped-year"></select>
+        </div>
+        <div class="actions">
+          <button type="button" class="primary" id="wrapped-save" hidden>Save image</button>
+          <button type="button" class="ghost" id="wrapped-copy">Copy text</button>
+        </div>
+        <p class="hint" id="wrapped-status" role="status"></p>
+      </div>
+    </div>
+    <p class="hint" id="wrapped-empty">Save at least 2 measurements in the same year in the Growth tracker to unlock your card.</p>
+  </section>
+
+  <section class="panel" data-view="track" aria-labelledby="data-title">
+    <div>
+      <h2 id="data-title" style="font:800 1.6rem/1.1 var(--display);margin:0 0 4px">Your data</h2>
+      <p class="hint">Everything is saved only on this device. Download a backup so you can restore it if you clear your browser or get a new phone.</p>
+    </div>
+    <div class="actions">
+      <button type="button" class="primary" id="backup-download">Download backup</button>
+      <button type="button" class="ghost" id="data-delete">Delete my data</button>
+    </div>
+    <div>
+      <label for="backup-file">Restore from a backup</label>
+      <input id="backup-file" type="file" accept=".json,application/json">
+    </div>
+    <p class="hint" id="data-status" role="status"></p>
+  </section>
+
+  <footer>
+    <p><strong>How it works:</strong> if your mum is under 163 cm, Heightline uses the standard mid-parental method. Add your parents' heights, add 13 cm for males or take away 13 cm for females, then halve it. The best-guess zone is deliberately narrow, and your real adult height could still land about 10 cm either side of the estimate.</p>
+    <p><strong>Male relatives rule:</strong> if your mum is 163 cm or taller, Heightline averages your dad with any brothers, grandads and uncles you added, with your dad counting most. Females then take away 13 cm. This is Heightline's own rule. It hasn't been tested, and leaving out your mum's height can make the estimate too high or too low.</p>
+    <p><strong>Your height now:</strong> from age 8, Heightline also projects your adult height from your current height using rough average growth for your age, then averages that with your family-based height. Taller people at the same age get a taller estimate.</p>
+    <p><strong>Age and growth stage rule:</strong> if you add your height now, these limit how much growth is left. For males, the minimum is 15 cm at ages 8 to 12, 9 cm at 13, 5 cm at 14 and 3 cm at 15. The maximum is 30 cm at 14, 15 cm at 15, 5 cm at 16 and 3 cm at 18 or older. If you're well below your family-based height at 16 or 17, the maximum rises by up to 10 cm to allow for catching up. Changes are spread evenly across the months, and before 16 the estimate falls by at most 3.6 cm a year unless a minimum above applies. Females use these limits 2 years earlier, and starting to develop earlier than most halves the minimum. Starting later than most raises both the minimum and maximum by 50%, unless you've chosen "growth has slowed". If your growth spurt hasn't started, your estimate is raised, with a minimum of 15 cm until 15, and any maximum is 50% higher. Under 8, your stage sets the limit: at least 15 cm before your growth spurt, 6 to 15 cm while growing quickly, and 1 to 6 cm once growth slows. Choosing "growth has slowed" overrides the younger age limits, and a year with no change means up to 1 cm at any age. These limits are Heightline's own rough rule and haven't been tested, so real growth can fall outside them.</p>
+    <p>Food, supplements and stretches can't push your height past what your body is set up for.</p>
+    <p>Your measurements, routine and door photos are saved only on this device and aren't uploaded. Location data is removed from photos when you add them. Everything else you type in the calculator isn't saved. <a href="privacy.html">Read the privacy notice</a>.</p>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
